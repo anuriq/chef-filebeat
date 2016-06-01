@@ -43,8 +43,20 @@ prospectors.each do |prospector, configuration|
   end
 end
 
-powershell 'install filebeat as service' do
-  code "& '#{node['filebeat']['windows']['base_dir']}/filebeat-#{node['filebeat']['version']}-windows/install-service-filebeat.ps1'"
+powershell_script 'install filebeat as service' do
+  code <<-EOH
+  if (Get-Service filebeat -ErrorAction SilentlyContinue) {
+    $service = Get-WmiObject -Class Win32_Service -Filter "name='filebeat'"
+    $service.StopService()
+    Start-Sleep -s 1
+    $service.delete()
+  }
+
+  $conf_file = (Resolve-Path '#{node['filebeat']['conf_file']}').Path
+  $exe_file = (Resolve-Path '#{node['filebeat']['windows']['package_dir']}').Path + '\\filebeat.exe'
+
+  New-Service -name filebeat -displayName filebeat -binaryPathName "`"$exe_file`" -c `"$conf_file`""
+  EOH
   only_if { node['platform'] == 'windows' }
 end
 

@@ -3,9 +3,12 @@ default['filebeat']['disable_service'] = false
 default['filebeat']['package_url'] = 'auto'
 
 default['filebeat']['notify_restart'] = true
-default['filebeat']['windows'] = { 'base_dir' => 'C:/opt/filebeat' }
+default['filebeat']['windows'] = {
+  'base_dir' => 'C:/opt/filebeat',
+  'package_dir' => "#{node['filebeat']['windows']['base_dir']}/filebeat-#{node['filebeat']['version']}-windows"
+}
 default['filebeat']['conf_dir'] = if node['platform'] == 'windows'
-                                    "#{node['filebeat']['windows']['base_dir']}/filebeat-#{node['filebeat']['version']}-windows"
+                                    node['filebeat']['windows']['package_dir']
                                   else
                                     '/etc/filebeat'
                                   end
